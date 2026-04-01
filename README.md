@@ -41,7 +41,7 @@ Install the enumeration tools (need at least one, but more = better coverage):
 go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 
 # Findomain
-# Download from: https://github.com/Findomain/Findomain/releases
+Download from: https://github.com/Findomain/Findomain/releases
 
 # Assetfinder (tomnomnom)
 go install github.com/tomnomnom/assetfinder@latest
@@ -166,6 +166,3 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-## 👨‍💻 Developer
-
-Built by a Web Application Pentester & Security Researcher.
