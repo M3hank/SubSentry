@@ -1,0 +1,15 @@
+# Example notify provider config for Discord
+# Copy this file to ~/.config/notify/provider-config.yaml
+# and replace with your actual Discord webhook URL.
+#
+# To create a webhook:
+#   1. Open Discord → Server Settings → Integrations → Webhooks
+#   2. Create a new webhook, copy the URL
+#   3. Paste it below
+
+discord:
+  - id: "subsentry"
+    discord_channel: "recon-alerts"
+    discord_username: "SubSentry"
+    discord_format: "{{data}}"
+    discord_webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
