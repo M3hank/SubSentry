@@ -1,56 +1,45 @@
-<h1 align="center">
-  🛡️ SubSentry
-</h1>
+# SubSentry
 
-<p align="center">
-  <b>Subdomain Monitoring & Alerting Tool</b><br>
-  <i>Continuously watch your targets for new subdomains and get notified on Discord.</i>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="Python 3.8+">
-  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License">
-  <img src="https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows-lightgrey" alt="Platform">
-</p>
+> A professional-grade subdomain monitoring and alerting engine. Keep a constant watch on your attack surface and receive instant Discord notifications when new assets appear.
 
 ---
 
-## 🔍 What is SubSentry?
+## Overview
 
-SubSentry aggregates subdomains from **multiple enumeration tools**, stores a baseline in a local SQLite database, and alerts you on **Discord** (via [ProjectDiscovery's notify](https://github.com/projectdiscovery/notify)) whenever **new subdomains** are discovered.
+SubSentry is a powerful utility designed for security researchers and bug bounty hunters. It streamlines the reconnaissance process by aggregating data from top-tier enumeration tools, maintaining a historical baseline in a local SQLite database, and alerting you the moment a change is detected.
 
-Perfect for bug bounty hunters and red teamers who need to stay on top of target surface changes.
+## Core Features
 
-### Key Features
+*   **Integrated Enumeration**: Harnesses the combined power of Subfinder, Findomain, and Assetfinder.
+*   **Persistent Baselines**: Automatically tracks known subdomains in a SQLite database with detailed timestamps.
+*   **Delta Detection**: Intelligent scanning identifies new discoveries and tracks disappearing assets.
+*   **Instant Alerting**: Delivers real-time notifications to Discord via ProjectDiscovery's `notify` tool.
+*   **Audit Trail**: Maintains a complete history of every scan performed with associated statistics.
 
-- 🔄 **Multi-Source Enumeration** — Combines [Subfinder](https://github.com/projectdiscovery/subfinder), [Findomain](https://github.com/Findomain/Findomain), and [Assetfinder](https://github.com/tomnomnom/assetfinder) in parallel
-- 📊 **Baseline Tracking** — SQLite database stores known subdomains with timestamps and source attribution
-- 🆕 **Diff Detection** — Compares each scan against the baseline to find new subdomains
-- 🔔 **Discord Notifications** — Pipes alerts through `notify` for instant Discord messages
-- 📈 **Scan History** — Full audit trail of every scan with stats
 ---
 
-## 📦 Installation
+## Getting Started
 
 ### Prerequisites
 
-Install the enumeration tools (need at least one, but more = better coverage):
+You should have at least one of these enumeration tools installed on your system for maximum coverage:
 
 ```bash
-# Subfinder (ProjectDiscovery)
+# Install Subfinder
 go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 
-# Findomain
-Download from: https://github.com/Findomain/Findomain/releases
-
-# Assetfinder (tomnomnom)
+# Install Assetfinder
 go install github.com/tomnomnom/assetfinder@latest
 
-# Notify (ProjectDiscovery) — for Discord alerts
+# Install Notify for Discord alerts
 go install -v github.com/projectdiscovery/notify/cmd/notify@latest
 ```
 
-### Install SubSentry
+*Note: Findomain can be downloaded directly from its [official releases](https://github.com/Findomain/Findomain/releases).*
+
+### Installation
+
+Clone the repository and install the package using pip:
 
 ```bash
 git clone https://github.com/subsentry/subsentry.git
@@ -60,81 +49,66 @@ pip install -e .
 
 ---
 
-## 🚀 Usage
+## Usage Guide
 
-### 1. Initialize Baseline
+### Initialize Your Target
+
+Establish your first baseline of known subdomains:
 
 ```bash
 subsentry init example.com
 ```
 
-This runs all available tools, collects subdomains, deduplicates them, and stores the result as your baseline.
+### Run a Delta Scan
 
-### 2. Scan for New Subdomains
+Scan for new subdomains and compare them against your baseline:
 
 ```bash
 subsentry scan example.com --notify
 ```
 
-```
-  → Scanning example.com (baseline: 142 subdomains)
+### Automated Monitoring
 
-  Running 3 sources: subfinder, findomain, assetfinder
-  ✓ subfinder: 98 subdomains
-  ✓ findomain: 112 subdomains
-  ✓ assetfinder: 87 subdomains
-  Total unique: 145 subdomains
-
-  ── Scan Results for example.com ──
-
-  Baseline: 142  |  Current: 145  |  New: 3  |  Gone: 0
-
-  ▶ New Subdomains (3)
-    + staging-api.example.com
-    + internal-dashboard.example.com
-    + dev-payments.example.com
-
-  ✓ Notification sent successfully
-```
-
-### 3. Continuous Monitoring
+Set up continuous monitoring to run at specific intervals:
 
 ```bash
 # Monitor every hour (default)
 subsentry monitor example.com --notify
 
-# Monitor every 5 minutes
+# Monitor with a custom 5-minute interval
 subsentry monitor example.com --notify --interval 300
 ```
 
-### 4. View Known Subdomains
+### Data Management
+
+Interact with your stored results:
 
 ```bash
-# Table format
+# List all known subdomains for a domain
 subsentry list example.com
 
-# JSON output (for piping to other tools)
+# Export results as JSON
 subsentry list example.com --json
-```
 
-### 5. View Scan History
-
-```bash
+# View full scan history and statistics
 subsentry history example.com
 ```
 
 ---
 
-## 🔔 Discord Notification Setup
+## Discord Notifications
 
-### 1. Create a Discord Webhook
+SubSentry leverages the `notify` utility for modular alerting.
 
-1. Go to your Discord server → **Channel Settings** → **Integrations** → **Webhooks**
-2. Click **New Webhook** → Copy the webhook URL
+### 1. Webhook Setup
 
-### 2. Configure Notify
+1. Open your Discord server settings.
+2. Navigate to **Integrations** and select **Webhooks**.
+3. Create a **New Webhook** and copy the URL.
 
-Create `~/.config/notify/provider-config.yaml`:
+### 2. Configuration
+
+Create or update your configuration file at `~/.config/notify/provider-config.yaml`:
 
 ```yaml
 discord:
@@ -142,27 +116,18 @@ discord:
     discord_channel: "recon-alerts"
     discord_username: "SubSentry"
     discord_format: "{{data}}"
-    discord_webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
+    discord_webhook_url: "YOUR_DISCORD_WEBHOOK_URL_HERE"
 ```
 
-### 3. Use with SubSentry
+### 3. Execution
 
 ```bash
-# Uses default notify config
+# Start scanning with notifications enabled
 subsentry scan example.com --notify
-
-# Use specific provider ID
-subsentry scan example.com --notify --notify-id subsentry
-
-# Use custom config path
-subsentry scan example.com --notify --provider-config /path/to/config.yaml
 ```
-
-
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
+## License
+
+This project is released under the MIT License. Please see the [LICENSE](LICENSE) file for more information.
