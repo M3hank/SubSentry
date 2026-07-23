@@ -306,6 +306,24 @@ def cmd_history(args):
     print()
 
 
+def cmd_delete(args):
+    """Delete target domain and all associated subdomains and history."""
+    domain = validate_domain(args.domain)
+    db = Database()
+
+    if not args.force:
+        confirm = input(f"Are you sure you want to delete {domain} and all its baseline data? (y/N): ")
+        if confirm.lower() not in ["y", "yes"]:
+            print_info("Deletion cancelled.")
+            return
+
+    deleted = db.delete_domain(domain)
+    if deleted:
+        print_success(f"Successfully deleted {Colors.CYAN}{Colors.BOLD}{domain}{Colors.RESET} from database.")
+    else:
+        print_warning(f"Domain {Colors.CYAN}{domain}{Colors.RESET} not found in database.")
+
+
 # ── Argument Parser ───────────────────────────────────────────────────────────
 
 def build_parser():
@@ -321,6 +339,7 @@ examples:
   subsentry monitor example.com -n     Continuously monitor (1h interval)
   subsentry monitor example.com -i 300 Monitor every 5 minutes
   subsentry list example.com           Show all known subdomains
+  subsentry delete example.com         Delete target domain and history
   subsentry sources                    Check which tools are installed
   subsentry history example.com        View scan history
         """,
@@ -374,6 +393,13 @@ examples:
         "--json", action="store_true", help="Output as JSON"
     )
 
+    # ── delete ──
+    p_delete = subparsers.add_parser("delete", help="Delete target domain and baseline data")
+    p_delete.add_argument("domain", help="Target domain")
+    p_delete.add_argument(
+        "-f", "--force", action="store_true", help="Skip confirmation prompt"
+    )
+
     # ── sources ──
     subparsers.add_parser("sources", help="Show enumeration source status")
 
@@ -395,6 +421,7 @@ COMMAND_MAP = {
     "scan": cmd_scan,
     "monitor": cmd_monitor,
     "list": cmd_list,
+    "delete": cmd_delete,
     "sources": cmd_sources,
     "history": cmd_history,
 }

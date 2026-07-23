@@ -10,11 +10,11 @@ SubSentry is a powerful utility designed for security researchers and bug bounty
 
 ## Core Features
 
-*   **Integrated Enumeration**: Harnesses the combined power of Subfinder, Findomain, and Assetfinder.
+*   **Multi-Source Enumeration**: Combines CLI tools (Subfinder, Findomain, Assetfinder) with zero-dependency native Python passive APIs (crt.sh, AlienVault OTX, HackerTarget, Anubis).
 *   **Persistent Baselines**: Automatically tracks known subdomains in a SQLite database with detailed timestamps.
 *   **Delta Detection**: Intelligent scanning identifies new discoveries and tracks disappearing assets.
 *   **Instant Alerting**: Delivers real-time notifications to Discord via ProjectDiscovery's `notify` tool.
-*   **Audit Trail**: Maintains a complete history of every scan performed with associated statistics.
+*   **Audit Trail & Management**: Maintains a complete history of every scan performed with easy deletion and data management commands.
 
 ---
 
@@ -22,7 +22,7 @@ SubSentry is a powerful utility designed for security researchers and bug bounty
 
 ### Prerequisites
 
-You should have at least one of these enumeration tools installed on your system for maximum coverage:
+SubSentry includes built-in API sources (crt.sh, AlienVault OTX, HackerTarget, Anubis) that work out-of-the-box. For maximum coverage, you can also install external CLI binaries:
 
 ```bash
 # Install Subfinder
@@ -42,8 +42,8 @@ go install -v github.com/projectdiscovery/notify/cmd/notify@latest
 Clone the repository and install the package using pip:
 
 ```bash
-git clone https://github.com/subsentry/subsentry.git
-cd subsentry
+git clone https://github.com/M3hank/SubSentry.git
+cd SubSentry
 pip install -e .
 ```
 
@@ -92,6 +92,12 @@ subsentry list example.com --json
 
 # View full scan history and statistics
 subsentry history example.com
+
+# Check active enumeration sources
+subsentry sources
+
+# Delete a domain and all its stored baseline data
+subsentry delete example.com -f
 ```
 
 ---

@@ -7,6 +7,10 @@ from subsentry.config import MAX_WORKERS
 from subsentry.sources.subfinder import SubfinderSource
 from subsentry.sources.findomain import FindomainSource
 from subsentry.sources.assetfinder import AssetfinderSource
+from subsentry.sources.crtsh import CrtshSource
+from subsentry.sources.alienvault import AlienVaultSource
+from subsentry.sources.hackertarget import HackerTargetSource
+from subsentry.sources.anubis import AnubisSource
 from subsentry.utils import Colors
 
 logger = logging.getLogger("subsentry")
@@ -17,11 +21,15 @@ ALL_SOURCES = [
     SubfinderSource(),
     FindomainSource(),
     AssetfinderSource(),
+    CrtshSource(),
+    AlienVaultSource(),
+    HackerTargetSource(),
+    AnubisSource(),
 ]
 
 
 def get_available_sources():
-    """Return only sources whose CLI tools are installed."""
+    """Return only sources whose tools or APIs are available."""
     return [s for s in ALL_SOURCES if s.is_available()]
 
 
@@ -53,7 +61,7 @@ def run_all_sources(domain, sources=None):
         sources = get_available_sources()
 
     if not sources:
-        logger.error("No enumeration sources available! Install at least one tool.")
+        logger.error("No enumeration sources available!")
         return set(), [], {}
 
     aggregated = set()

@@ -85,6 +85,15 @@ class Database:
             ).fetchall()
             return [dict(r) for r in rows]
 
+    def delete_domain(self, domain):
+        """Delete a domain and all its associated subdomains and scan history."""
+        with self._connect() as conn:
+            c1 = conn.execute("DELETE FROM subdomains WHERE domain = ?", (domain,))
+            c2 = conn.execute("DELETE FROM scan_history WHERE domain = ?", (domain,))
+            c3 = conn.execute("DELETE FROM domains WHERE domain = ?", (domain,))
+            return c3.rowcount > 0 or c1.rowcount > 0
+
+
     # ── Subdomain Operations ──────────────────────────────────────────────
 
     def get_baseline(self, domain):
