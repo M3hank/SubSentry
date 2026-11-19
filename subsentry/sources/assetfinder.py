@@ -1,10 +1,10 @@
 """Assetfinder integration for SubSentry."""
 
-import subprocess
 import logging
+import subprocess
 
-from subsentry.sources.base import SubdomainSource
 from subsentry.config import SOURCE_TIMEOUT
+from subsentry.sources.base import SubdomainSource
 
 logger = logging.getLogger("subsentry")
 

@@ -1,11 +1,12 @@
 """Diff engine — compares current scan against stored baseline."""
 
+from __future__ import annotations
+
 from subsentry.utils import Colors
 
 
 def compute_diff(baseline, current):
-    """
-    Compare current scan results against the stored baseline.
+    """Compare current scan results against the stored baseline.
 
     Args:
         baseline: set of previously known subdomains
@@ -14,6 +15,8 @@ def compute_diff(baseline, current):
     Returns:
         dict with 'new', 'removed', and summary stats
     """
+    baseline = set(baseline or set())
+    current = set(current or set())
     new = current - baseline
     removed = baseline - current
 
@@ -62,17 +65,16 @@ def format_diff_terminal(diff_result, domain):
 
 
 def format_diff_notify(diff_result, domain):
-    """
-    Format the diff result for the notify tool (plain text for Discord).
+    """Format the diff result for chat notifications (plain text).
 
-    Returns a string ready to pipe into `notify`.
+    Returns an empty string when nothing new was found.
     """
     if not diff_result["new"]:
         return ""
 
     lines = []
     lines.append(f"🔔 SubSentry Alert — {domain}")
-    lines.append(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     lines.append(f"📊 {diff_result['new_count']} new subdomain(s) discovered!")
     lines.append("")
 

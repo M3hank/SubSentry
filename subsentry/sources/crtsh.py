@@ -1,12 +1,12 @@
 """crt.sh Certificate Transparency integration for SubSentry."""
 
 import json
-import urllib.request
-import urllib.error
 import logging
+import urllib.error
+import urllib.request
 
-from subsentry.sources.base import SubdomainSource
 from subsentry.config import SOURCE_TIMEOUT
+from subsentry.sources.base import SubdomainSource
 
 logger = logging.getLogger("subsentry")
 

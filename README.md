@@ -1,139 +1,132 @@
 # SubSentry
 
-> A professional-grade subdomain monitoring and alerting engine. Keep a constant watch on your attack surface and receive instant Discord notifications when new assets appear.
+> Subdomain monitoring with persistent baselines, delta detection and native alerts.
+> Stop re-running recon by hand — get told the moment a new asset appears.
+
+[![CI](https://github.com/M3hank/SubSentry/actions/workflows/ci.yml/badge.svg)](https://github.com/M3hank/SubSentry/actions/workflows/ci.yml)
 
 ---
 
-## Overview
+## What it does
 
-SubSentry is a powerful utility designed for security researchers and bug bounty hunters. It streamlines the reconnaissance process by aggregating data from top-tier enumeration tools, maintaining a historical baseline in a local SQLite database, and alerting you the moment a change is detected.
+1. **Collects** subdomains from CLI tools (subfinder, findomain, assetfinder) and native APIs (crt.sh, AlienVault OTX, HackerTarget, Anubis) in parallel.
+2. **Stores** a baseline per domain in SQLite (`~/.subsentry/subsentry.db` by default).
+3. **Diffs** every scan against the baseline and reports new / disappeared assets.
+4. **Alerts** through Discord, Slack, Telegram or any generic webhook — no extra binaries required.
 
-## Core Features
-
-*   **Multi-Source Enumeration**: Combines CLI tools (Subfinder, Findomain, Assetfinder) with zero-dependency native Python passive APIs (crt.sh, AlienVault OTX, HackerTarget, Anubis).
-*   **Persistent Baselines**: Automatically tracks known subdomains in a SQLite database with detailed timestamps.
-*   **Delta Detection**: Intelligent scanning identifies new discoveries and tracks disappearing assets.
-*   **Instant Alerting**: Delivers real-time notifications to Discord via ProjectDiscovery's `notify` tool.
-*   **Audit Trail & Management**: Maintains a complete history of every scan performed with easy deletion and data management commands.
-
----
-
-## Getting Started
-
-### Prerequisites
-
-SubSentry includes built-in API sources (crt.sh, AlienVault OTX, HackerTarget, Anubis) that work out-of-the-box. For maximum coverage, you can also install external CLI binaries:
-
-```bash
-# Install Subfinder
-go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-
-# Install Assetfinder
-go install github.com/tomnomnom/assetfinder@latest
-
-# Install Notify for Discord alerts
-go install -v github.com/projectdiscovery/notify/cmd/notify@latest
-```
-
-*Note: Findomain can be downloaded directly from its [official releases](https://github.com/Findomain/Findomain/releases).*
-
-### Installation
-
-Clone the repository and install the package using pip:
+## Install
 
 ```bash
 git clone https://github.com/M3hank/SubSentry.git
 cd SubSentry
-pip install -e .
+pip install -e .            # runtime has zero Python dependencies
+# optional:
+pip install -e ".[dev]"     # pytest + ruff
 ```
 
----
-
-## Usage Guide
-
-### Initialize Your Target
-
-Establish your first baseline of known subdomains:
+The native API sources work out of the box. Installing the CLI tools increases coverage:
 
 ```bash
-subsentry init example.com
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+go install github.com/tomnomnom/assetfinder@latest
+# findomain: https://github.com/Findomain/Findomain/releases
 ```
 
-### Run a Delta Scan
-
-Scan for new subdomains and compare them against your baseline:
+## Quick start
 
 ```bash
+subsentry init example.com                  # first baseline
+subsentry scan example.com --notify         # diff + alert on new assets
+subsentry monitor example.com -i 900 -n     # keep watching every 15 min
+subsentry list example.com                  # everything known
+subsentry stats                             # all tracked domains
+```
+
+## Alerts
+
+Set one of these environment variables and `--notify` starts working immediately:
+
+| Transport | Variables |
+|-----------|-----------|
+| Discord | `SUBSENTRY_DISCORD_WEBHOOK` |
+| Slack | `SUBSENTRY_SLACK_WEBHOOK` |
+| Telegram | `SUBSENTRY_TELEGRAM_BOT_TOKEN` + `SUBSENTRY_TELEGRAM_CHAT_ID` |
+| Generic JSON webhook | `SUBSENTRY_WEBHOOK_URL` |
+
+```bash
+export SUBSENTRY_DISCORD_WEBHOOK="https://discord.com/api/webhooks/..."
 subsentry scan example.com --notify
 ```
 
-### Automated Monitoring
+ProjectDiscovery's `notify` is still supported and is used automatically when
+`--provider-config` / `--notify-id` is passed (or when `notify` is installed and
+no native webhook is configured). Messages longer than Discord's limit are
+chunked automatically.
 
-Set up continuous monitoring to run at specific intervals:
-
-```bash
-# Monitor every hour (default)
-subsentry monitor example.com --notify
-
-# Monitor with a custom 5-minute interval
-subsentry monitor example.com --notify --interval 300
-```
-
-### Data Management
-
-Interact with your stored results:
+## Automation / CI
 
 ```bash
-# List all known subdomains for a domain
-subsentry list example.com
+# Machine-readable output
+subsentry scan example.com --json scan.json
 
-# Export results as JSON
-subsentry list example.com --json
+# Exit 2 when new subdomains appear — useful for cron + alerting pipelines
+subsentry scan example.com --fail-on-new -q
 
-# View full scan history and statistics
-subsentry history example.com
-
-# Check active enumeration sources
-subsentry sources
-
-# Delete a domain and all its stored baseline data
-subsentry delete example.com -f
+# Watch loop with jitter and per-scan JSON snapshots
+subsentry monitor example.com -i 3600 --jitter 300 --json-dir ./snapshots -n
 ```
 
----
+Exit codes: `0` success, `1` error (no baseline, no results, bad input), `2` new
+subdomains with `--fail-on-new`.
 
-## Discord Notifications
-
-SubSentry leverages the `notify` utility for modular alerting.
-
-### 1. Webhook Setup
-
-1. Open your Discord server settings.
-2. Navigate to **Integrations** and select **Webhooks**.
-3. Create a **New Webhook** and copy the URL.
-
-### 2. Configuration
-
-Create or update your configuration file at `~/.config/notify/provider-config.yaml`:
-
-```yaml
-discord:
-  - id: "subsentry"
-    discord_channel: "recon-alerts"
-    discord_username: "SubSentry"
-    discord_format: "{{data}}"
-    discord_webhook_url: "YOUR_DISCORD_WEBHOOK_URL_HERE"
-```
-
-### 3. Execution
+## Snapshots
 
 ```bash
-# Start scanning with notifications enabled
-subsentry scan example.com --notify
+subsentry export example.com -o acme.json   # one domain
+subsentry export --all -o backup.json       # entire database
+subsentry import acme.json                  # merge into another machine/db
 ```
 
----
+## Commands
+
+| Command | Purpose |
+|---------|---------|
+| `init <domain>` | Create/refresh the baseline |
+| `scan <domain>` | Diff against baseline, optionally alert |
+| `monitor <domain>` | Continuous scans with interval + jitter |
+| `list <domain>` | Known subdomains (`--json`) |
+| `history <domain>` | Scan history (`--json`) |
+| `stats` | Per-domain database overview |
+| `export` / `import` | JSON snapshots |
+| `sources` | Source + notifier availability |
+| `delete <domain>` | Remove a target and its data |
+
+Shared flags: `--db PATH`, `-q/--quiet`, `--source NAME`, `--exclude-source NAME`,
+`--workers N`, `--retries N`.
+
+## Configuration
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `SUBSENTRY_DATA_DIR` | `~/.subsentry` | Data directory |
+| `SUBSENTRY_DB` | `<data>/subsentry.db` | Database path |
+| `SUBSENTRY_INTERVAL` | `3600` | Default monitor interval |
+| `SUBSENTRY_MAX_WORKERS` | `3` | Concurrent sources |
+| `SUBSENTRY_SOURCE_TIMEOUT` | `300` | Per-source timeout (s) |
+| `SUBSENTRY_SOURCE_RETRIES` | `1` | Retries per failing source |
+| `NO_COLOR` | unset | Disable ANSI colours |
+
+## Development
+
+```bash
+pip install -e ".[dev]"
+pytest -q
+ruff check .
+```
+
+The suite covers the database UPSERT semantics, diffing, notifier payloads,
+source retries and the full CLI flow with the network layer mocked.
 
 ## License
 
-This project is released under the MIT License. Please see the [LICENSE](LICENSE) file for more information.
+MIT — see [LICENSE](LICENSE).
