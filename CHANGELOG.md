@@ -11,7 +11,7 @@
 - `export` / `import` commands plus `stats` overview.
 - Per-source include/exclude filters (`--source`, `--exclude-source`),
   configurable workers and retries, per-source timing.
-- Full pytest suite (47 tests) and GitHub Actions CI across Python 3.9–3.13.
+- Full pytest suite (48 tests) and GitHub Actions CI across Python 3.10–3.13.
 - `NO_COLOR` support; colour is only emitted to a real terminal.
 
 ### Fixed
@@ -30,6 +30,8 @@
 - Exit codes are meaningful (0/1/2) instead of always 0.
 
 ### Changed
+- Python 3.10+ is now the supported floor: 3.9 is EOL and `setup-python` no
+  longer provides it on current Ubuntu runners.
 - Packaging moved to `pyproject.toml`; the `requests` dependency was dropped
   (the project uses the standard library only).
 - `Database(db_path=...)` accepts an explicit path; all commands accept `--db`.
